@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+build/
+dist/
+
+# Sanal ortam
+.venv/
+venv/
+env/
+
+# Editör / IDE
+.vscode/
+.idea/
+
+# Ortam değişkenleri ve gizli bilgiler (token, API key vs.)
+.env
+*.env
+secrets.py
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Log ve geçici dosyalar
+*.log
+*.tmp
+
+# Veritabanı dosyaları (Flask projesi için)
+*.sqlite3
+*.db
+instance/
