@@ -94,11 +94,33 @@ class GridMover(AnimatedSprite):
         if self.facing == "left":
             state += "_left"
         return state
+    
+    @property
+    def hitbox(self):
+        box = Rect(0, 0, 28, 28)
+        box.center = (self.actor.x, self.actor.y - settings.TILE_SIZE // 2)
+        return box
+
+        
 
 
 class Hero(GridMover):
     def __init__(self, col, row):
         super().__init__(make_animations("hero"), col, row, settings.HERO_STEP_TIME)
+        self.hp = settings.HERO_START_HP
+        self.invulnerable_timer = 0.0
+
+    def take_damage(self):
+        if self.invulnerable_timer > 0:
+            return False
+        print(self.hp)
+        self.hp -= 1
+        self.invulnerable_timer = settings.INVULNERABLE_TIME
+        return True
+
+    def heal(self):
+        self.hp = min(self.hp + 1, settings.HERO_MAX_HP)
+
 
     def handle_input(self, level):
         if self.is_moving:
@@ -123,10 +145,18 @@ class Hero(GridMover):
                 self.move_to(new_col, new_row)
 
     def update(self, dt, level):
+        self.invulnerable_timer = max(0.0, self.invulnerable_timer - dt)
         self.update_motion(dt)
         self.handle_input(level)
         self.set_state(self.animation_state())
         super().update(dt)
+        
+    def draw(self):
+        blinking = int(self.invulnerable_timer * 10) % 2 == 1
+        if self.invulnerable_timer > 0 and blinking:
+            return
+        super().draw()
+
         
         
 class Enemy(GridMover):
@@ -208,3 +238,5 @@ class Skeleton(Enemy):
                 return self.direction
             else:
                 return None
+            
+            

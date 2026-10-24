@@ -4,14 +4,14 @@ from pgzero.rect import Rect
 from pgzero.builtins import keyboard, keys, music, sounds ,exit
 from ui import Button
 from sprites import AnimatedSprite, Hero, make_animations , Goblin, Skeleton
-from level import Level, MAP
+from level import Level, MAP , cell_to_foot
 
 
 
 WIDTH = settings.WIDTH
 HEIGHT = settings.HEIGHT
 
-level = Level(MAP)
+
 
 active_screen = "start_screen" 
 
@@ -20,13 +20,33 @@ sound_button = Button("Sound: On", (WIDTH // 2, 450), "blue")
 exit_button = Button("Exit", (WIDTH // 2, 520), "red")
 back_to_game_button = Button("Back to Game", (WIDTH // 2, HEIGHT // 2 - 25), "green")
 back_to_main_menu_button = Button("Main Menu", (WIDTH // 2, HEIGHT // 2 + 45), "red")
+play_again_button = Button("Play Again", (WIDTH // 2, 430), "green")
+end_menu_button = Button("Main Menu", (WIDTH // 2, 500), "red")
 
 sound_on = True  
 
-hero = Hero(*level.hero_start)
+
 
 ENEMY_TYPES = {"g": Goblin, "s": Skeleton}
-enemies = [ENEMY_TYPES[char](col, row) for (char, col, row) in level.enemy_spawns]
+
+COIN_ANIMATION = {"idle": [f"coin_{i}" for i in range(4)]}
+
+
+def make_coin(col, row):
+    x, y = cell_to_foot(col, row)
+    return AnimatedSprite(COIN_ANIMATION, (x, y - 12))
+
+def reset_game():
+    global level, hero, enemies, coin_sprites
+    level = Level(MAP)
+    hero = Hero(*level.hero_start)
+    enemies = [ENEMY_TYPES[char](col, row)
+               for char, col, row in level.enemy_spawns]
+    coin_sprites = {cell: make_coin(*cell) for cell in level.coins}
+
+
+reset_game()
+
 
 
 #* ================SOUND======================
@@ -72,11 +92,39 @@ def draw_start_screen():
 def draw_game_screen():
     screen.fill((0, 0, 0))
     level.draw(screen)
+    for coin in coin_sprites.values():
+        coin.draw()
+
     for enemy in enemies:
         enemy.draw()
     hero.draw()
+    draw_hud()
+
+def draw_hud():
+    for i in range(settings.HERO_MAX_HP):
+        image = "heart_full" if i < hero.hp else "heart_empty"
+        screen.blit(image, (settings.OFFSET_X + i * 50, 6))
+    collected = level.total_coins - len(level.coins)
+    screen.draw.text(f"Coins: {collected}/{level.total_coins}",
+                     topright=(WIDTH - settings.OFFSET_X, 16),
+                     fontsize=36, color="gold")
+
+def draw_end_screen(title, color):
+    screen.fill((0, 0, 0))
+    screen.draw.text(title, center=(WIDTH // 2, 280), fontsize=80, color=color)
+    collected = level.total_coins - len(level.coins)
+    screen.draw.text(f"Coins: {collected}/{level.total_coins}",
+                     center=(WIDTH // 2, 350), fontsize=36, color="white")
+    play_again_button.draw(screen)
+    end_menu_button.draw(screen)
 
 
+def draw_win_screen():
+    draw_end_screen("YOU ESCAPED!", "gold")
+
+
+def draw_lose_screen():
+    draw_end_screen("GAME OVER", "red")
 
 
 def draw():
@@ -87,17 +135,51 @@ SCREENS = {
     "start_screen": draw_start_screen,
     "game_screen": draw_game_screen,
     "pause_screen": draw_pause_screen,
+    "win_screen": draw_win_screen,
+    "lose_screen": draw_lose_screen,
+
 }
 
 def update(dt):
-    if active_screen == "game_screen":
-        hero.update(dt, level)
+    if active_screen != "game_screen":
+        return
+    hero.update(dt, level)
+    for enemy in enemies:
+        enemy.update(dt, level)
+    for coin in coin_sprites.values():
+        coin.update(dt)
+    check_pickups()
+    check_enemy_hits()
+    check_game_over()
+
+            
         
-        for enemy in enemies:
-            enemy.update(dt, level)
+def check_pickups():
+    hero_cell = (hero.col, hero.row)
+    if hero_cell in level.coins:
+        level.coins.discard(hero_cell)
+        del coin_sprites[hero_cell]
+        play_sound("coin")
+    if hero_cell in level.potions:
+        level.potions.discard(hero_cell)
+        hero.heal()
+        play_sound("heal")
 
 
+def check_enemy_hits():
+    for enemy in enemies:
+        if hero.hitbox.colliderect(enemy.hitbox) and hero.take_damage():
+            play_sound("hit")
 
+
+def check_game_over():
+    global active_screen
+    if hero.hp <= 0:
+        play_sound("lose")
+        active_screen = "lose_screen"
+    elif (hero.col, hero.row) == level.exit and not level.coins:
+        play_sound("win")
+        active_screen = "win_screen"
 
 
 def on_mouse_down(pos):
@@ -118,6 +200,15 @@ def on_mouse_down(pos):
         elif back_to_main_menu_button.is_clicked(pos):
             play_sound("click")
             active_screen = "start_screen"
+    elif active_screen in ("win_screen", "lose_screen"):
+        if play_again_button.is_clicked(pos):
+            play_sound("click")
+            reset_game()
+            active_screen = "game_screen"
+        elif end_menu_button.is_clicked(pos):
+            play_sound("click")
+            active_screen = "start_screen"
+
 
 
 def on_key_down(key):
@@ -128,6 +219,9 @@ def on_key_down(key):
             active_screen = "pause_screen"
         elif active_screen == "pause_screen":
             active_screen = "game_screen"
+            
+    if key == keys.H:
+        hero.take_damage()
 
 music.set_volume(0.4)
 music.play("dungeon")

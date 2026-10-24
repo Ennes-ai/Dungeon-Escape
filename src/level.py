@@ -19,11 +19,16 @@ MAP = [
 ]
 
 
+
 class Level:
     def __init__(self, layout):
         self.layout = layout
         self.walls = set()
         self.enemy_spawns = []
+        self.coins = set()
+        self.potions = set()
+        self.exit = None
+
         for row, line in enumerate(layout):
             for col, char in enumerate(line):
                 if char == "W":
@@ -32,7 +37,14 @@ class Level:
                     self.hero_start = (col, row)
                 elif char in "gs":
                     self.enemy_spawns.append((char,col, row))
+                elif char == "C":
+                    self.coins.add((col, row))
+                elif char == "P":
+                    self.potions.add((col, row))
+                elif char == "E":
+                    self.exit = (col, row)
        
+        self.total_coins = len(self.coins)
 
     def is_wall(self, col, row):
         return (col, row) in self.walls
@@ -43,6 +55,14 @@ class Level:
                 pos = cell_to_pixel(col, row)
                 if char == "W":
                     screen.blit("wall", pos)
+                    
+                elif (col, row) in self.potions:
+                    screen.blit("floor_1", pos)
+                    screen.blit("potion", pos)
+
+                elif char == "E":
+                    screen.blit("exit", pos)
+                    
                 else:
                     screen.blit("floor_1", pos)
 
