@@ -1,7 +1,10 @@
+import random
 from pgzero.actor import Actor
 from level import cell_to_foot
 from pgzero.builtins import keyboard
 import settings
+from pgzero.rect import Rect
+
 
 
 def make_animations(name, states=("idle", "run", "idle_left", "run_left"),
@@ -124,3 +127,84 @@ class Hero(GridMover):
         self.handle_input(level)
         self.set_state(self.animation_state())
         super().update(dt)
+        
+        
+class Enemy(GridMover):
+    name = ""
+    step_time = 0.3
+    wait_time = 0.5
+    
+    def __init__(self, col, row):
+        super().__init__(make_animations(self.name), col, row, self.step_time)
+        self.wait_timer = 0.0
+        self.territory = self.make_territory(col, row)
+        
+        
+    def make_territory(self, col ,row):
+        raise NotImplementedError
+    
+    def can_enter(self, col, row, level):
+        return self.territory.collidepoint(col, row) and not level.is_wall(col, row)
+
+        
+    
+    def choose_step(self, level):
+        raise NotImplementedError
+    
+    def update(self, dt, level):
+        self.update_motion(dt)
+        if not self.is_moving:
+            self.wait_timer += dt
+            if self.wait_timer >= self.wait_time:
+                self.wait_timer = 0.0
+                step = self.choose_step(level)
+                if step is not None:
+                    self.move_to(self.col + step[0], self.row + step[1])
+        self.set_state(self.animation_state())
+        super().update(dt)
+
+            
+class Goblin(Enemy):
+    name = "goblin"
+    step_time = 0.25
+    wait_time = 0.4
+    
+    def make_territory(self, col, row):
+        return Rect(col - 2, row - 2, 5, 5)
+    
+    def choose_step(self, level):
+        options = []
+        for direction in DIRECTIONS.values():
+            if self.can_enter(self.col + direction[0], self.row + direction[1], level):
+                options.append(direction)
+        if options:
+            return random.choice(options)
+        else:
+            return None
+    
+class Skeleton(Enemy):
+    name = "skeleton"
+    step_time = 0.4
+    wait_time = 0.7
+    
+    def __init__(self, col, row):
+        super().__init__(col, row)
+        self.direction = (1,0)
+        
+    def make_territory(self, col, row):
+        return Rect(col - 3, row , 7, 1)
+    
+    def choose_step(self, level):
+        new_col = self.col + self.direction[0]
+        new_row = self.row + self.direction[1]
+        if self.can_enter(new_col, new_row, level):
+            return self.direction
+
+        else:
+            self.direction = (-self.direction[0], -self.direction[1])
+            new_col = self.col + self.direction[0]
+            new_row = self.row + self.direction[1]
+            if self.can_enter(new_col, new_row, level):
+                return self.direction
+            else:
+                return None

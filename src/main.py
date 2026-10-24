@@ -3,7 +3,7 @@ import settings
 from pgzero.rect import Rect
 from pgzero.builtins import keyboard, keys, music, sounds ,exit
 from ui import Button
-from sprites import AnimatedSprite, Hero, make_animations
+from sprites import AnimatedSprite, Hero, make_animations , Goblin, Skeleton
 from level import Level, MAP
 
 
@@ -24,6 +24,9 @@ back_to_main_menu_button = Button("Main Menu", (WIDTH // 2, HEIGHT // 2 + 45), "
 sound_on = True  
 
 hero = Hero(*level.hero_start)
+
+ENEMY_TYPES = {"g": Goblin, "s": Skeleton}
+enemies = [ENEMY_TYPES[char](col, row) for (char, col, row) in level.enemy_spawns]
 
 
 #* ================SOUND======================
@@ -69,6 +72,8 @@ def draw_start_screen():
 def draw_game_screen():
     screen.fill((0, 0, 0))
     level.draw(screen)
+    for enemy in enemies:
+        enemy.draw()
     hero.draw()
 
 
@@ -87,6 +92,9 @@ SCREENS = {
 def update(dt):
     if active_screen == "game_screen":
         hero.update(dt, level)
+        
+        for enemy in enemies:
+            enemy.update(dt, level)
 
 
 

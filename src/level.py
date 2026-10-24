@@ -31,7 +31,7 @@ class Level:
                 elif char == "H":
                     self.hero_start = (col, row)
                 elif char in "gs":
-                    self.enemy_spawns.append((col, row))
+                    self.enemy_spawns.append((char,col, row))
        
 
     def is_wall(self, col, row):
