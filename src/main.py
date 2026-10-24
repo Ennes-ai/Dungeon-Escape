@@ -4,14 +4,16 @@ from pgzero.rect import Rect
 from pgzero.builtins import keyboard, keys, music, sounds ,exit
 from ui import Button
 from sprites import AnimatedSprite, make_animations
+from level import Level, MAP
+
 
 
 WIDTH = settings.WIDTH
 HEIGHT = settings.HEIGHT
 
+level = Level(MAP)
 
-
-active_screen = "start_screen"
+active_screen = "start_screen" 
 
 start_button = Button("Start", (WIDTH // 2, 380), "green")
 sound_button = Button("Sound: On", (WIDTH // 2, 450), "blue")
@@ -66,6 +68,7 @@ def draw_start_screen():
 
 def draw_game_screen():
     screen.fill((0, 0, 0))
+    level.draw(screen)
     hero.draw()
 
 
