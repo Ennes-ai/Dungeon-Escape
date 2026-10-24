@@ -3,7 +3,7 @@ import settings
 from pgzero.rect import Rect
 from pgzero.builtins import keyboard, keys, music, sounds ,exit
 from ui import Button
-from sprites import AnimatedSprite, make_animations
+from sprites import AnimatedSprite, Hero, make_animations
 from level import Level, MAP
 
 
@@ -23,7 +23,7 @@ back_to_main_menu_button = Button("Main Menu", (WIDTH // 2, HEIGHT // 2 + 45), "
 
 sound_on = True  
 
-hero = AnimatedSprite(make_animations("hero"), (WIDTH // 2, HEIGHT // 2))
+hero = Hero(*level.hero_start)
 
 
 #* ================SOUND======================
@@ -86,11 +86,7 @@ SCREENS = {
 
 def update(dt):
     if active_screen == "game_screen":
-        if keyboard.space:
-            hero.set_state("run")
-        else:
-            hero.set_state("idle")
-        hero.update(dt)
+        hero.update(dt, level)
 
 
 

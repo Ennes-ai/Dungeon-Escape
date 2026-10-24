@@ -23,10 +23,15 @@ class Level:
     def __init__(self, layout):
         self.layout = layout
         self.walls = set()
+        self.enemy_spawns = []
         for row, line in enumerate(layout):
             for col, char in enumerate(line):
                 if char == "W":
                     self.walls.add((col, row))
+                elif char == "H":
+                    self.hero_start = (col, row)
+                elif char in "gs":
+                    self.enemy_spawns.append((col, row))
        
 
     def is_wall(self, col, row):
@@ -46,3 +51,10 @@ def cell_to_pixel(col, row):
     x = settings.OFFSET_X + col * settings.TILE_SIZE
     y = settings.OFFSET_Y + row * settings.TILE_SIZE
     return x, y
+
+def cell_to_foot(col, row):
+    x = settings.OFFSET_X + col * settings.TILE_SIZE
+    y = settings.OFFSET_Y + row * settings.TILE_SIZE
+    
+    bottom_center = (x + settings.TILE_SIZE // 2, y + settings.TILE_SIZE)
+    return bottom_center
