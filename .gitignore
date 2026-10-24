@@ -33,3 +33,5 @@ desktop.ini
 *.sqlite3
 *.db
 instance/
+# Araç ayarları
+.serena/
