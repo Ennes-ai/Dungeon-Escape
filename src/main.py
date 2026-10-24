@@ -1,18 +1,15 @@
 import pgzrun
 import settings
 from pgzero.rect import Rect
-from pgzero.actor import Actor
-from pgzero.music import _music 
-from pgzero.builtins import keyboard, keys, music, sounds
-
-
-
+from pgzero.builtins import keyboard, keys, music, sounds ,exit
 from ui import Button
+from sprites import AnimatedSprite, make_animations
+
+
 WIDTH = settings.WIDTH
 HEIGHT = settings.HEIGHT
 
 
-back_to_main_menu_button = Rect((WIDTH // 2 - 100, HEIGHT // 2 + 45), (200, 50))
 
 active_screen = "start_screen"
 
@@ -23,6 +20,9 @@ back_to_game_button = Button("Back to Game", (WIDTH // 2, HEIGHT // 2 - 25), "gr
 back_to_main_menu_button = Button("Main Menu", (WIDTH // 2, HEIGHT // 2 + 45), "red")
 
 sound_on = True  
+
+hero = AnimatedSprite(make_animations("hero"), (WIDTH // 2, HEIGHT // 2))
+
 
 #* ================SOUND======================
 
@@ -35,9 +35,9 @@ def toggle_sound():
     sound_on = not sound_on
     play_sound("click")
     if sound_on:
-        _music.unpause()
+        music.unpause()
     else:
-        _music.pause()
+        music.pause()
     sound_button.text = "Sound: On" if sound_on else "Sound: Off"
 
 #*===================================================
@@ -66,7 +66,7 @@ def draw_start_screen():
 
 def draw_game_screen():
     screen.fill((0, 0, 0))
-    screen.draw.text("Game Screen", center=(WIDTH // 2, HEIGHT // 2), color="white", fontsize=30)
+    hero.draw()
 
 
 
@@ -81,11 +81,15 @@ SCREENS = {
     "pause_screen": draw_pause_screen,
 }
 
-def update():
-    pass
+def update(dt):
+    if active_screen == "game_screen":
+        if keyboard.space:
+            hero.set_state("run")
+        else:
+            hero.set_state("idle")
+        hero.update(dt)
 
-def exit():
-    pgzrun.quit()
+
 
 
 
@@ -101,10 +105,9 @@ def on_mouse_down(pos):
         exit()
 
     elif active_screen == "pause_screen":
-        play_sound("click")
         if back_to_game_button.is_clicked(pos):
             active_screen = "game_screen"
-
+            play_sound("click")
         elif back_to_main_menu_button.is_clicked(pos):
             play_sound("click")
             active_screen = "start_screen"
