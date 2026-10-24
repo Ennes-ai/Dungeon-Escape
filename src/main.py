@@ -1,11 +1,11 @@
 import pgzrun
-import Settings
+import settings
 from pgzero.rect import Rect
 from pgzero.builtins import keyboard, keys
 from pgzero.actor import Actor
 
-WIDTH = Settings.WIDTH
-HEIGHT = Settings.HEIGHT
+WIDTH = settings.WIDTH
+HEIGHT = settings.HEIGHT
 
 
 start_buton = Rect((WIDTH // 2 - 100, HEIGHT // 2), (200, 50))
