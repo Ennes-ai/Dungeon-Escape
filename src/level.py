@@ -19,6 +19,16 @@ MAP = [
 ]
 
 
+def cell_to_pixel(col, row):
+    x = settings.OFFSET_X + col * settings.TILE_SIZE
+    y = settings.OFFSET_Y + row * settings.TILE_SIZE
+    return x, y
+
+
+def cell_to_foot(col, row):
+    x, y = cell_to_pixel(col, row)
+    return x + settings.TILE_SIZE // 2, y + settings.TILE_SIZE
+
 
 class Level:
     def __init__(self, layout):
@@ -36,45 +46,29 @@ class Level:
                 elif char == "H":
                     self.hero_start = (col, row)
                 elif char in "gs":
-                    self.enemy_spawns.append((char,col, row))
+                    self.enemy_spawns.append((char, col, row))
                 elif char == "C":
                     self.coins.add((col, row))
                 elif char == "P":
                     self.potions.add((col, row))
                 elif char == "E":
                     self.exit = (col, row)
-       
+
         self.total_coins = len(self.coins)
 
     def is_wall(self, col, row):
         return (col, row) in self.walls
-    
+
     def draw(self, screen):
         for row, line in enumerate(self.layout):
             for col, char in enumerate(line):
                 pos = cell_to_pixel(col, row)
                 if char == "W":
                     screen.blit("wall", pos)
-                    
                 elif (col, row) in self.potions:
                     screen.blit("floor_1", pos)
                     screen.blit("potion", pos)
-
                 elif char == "E":
                     screen.blit("exit", pos)
-                    
                 else:
                     screen.blit("floor_1", pos)
-
-                
-def cell_to_pixel(col, row):
-    x = settings.OFFSET_X + col * settings.TILE_SIZE
-    y = settings.OFFSET_Y + row * settings.TILE_SIZE
-    return x, y
-
-def cell_to_foot(col, row):
-    x = settings.OFFSET_X + col * settings.TILE_SIZE
-    y = settings.OFFSET_Y + row * settings.TILE_SIZE
-    
-    bottom_center = (x + settings.TILE_SIZE // 2, y + settings.TILE_SIZE)
-    return bottom_center
